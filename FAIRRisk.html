@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAIR Risk Assessment Calculator</title>
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2980b9;
+      --danger-color: #e74c3c;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --light-bg: #f8f9fa;
+      --dark-bg: #343a40;
+      --border-color: #dee2e6;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--light-bg);
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .header {
+      background-color: var(--dark-bg);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+    }
+    
+    .subheader {
+      background-color: rgba(52, 152, 219, 0.1);
+      padding: 0.8rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      font-style: italic;
+      color: #555;
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .container {
+      background: white;
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .container h2 {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      margin-top: 0;
+    }
+    
+    .asset, .threatBlock {
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-radius: 8px;
+      background: rgba(52, 152, 219, 0.02);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .asset:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .asset h3 {
+      margin-top: 0;
+      color: var(--secondary-color);
+      display: flex;
+      align-items: center;
+    }
+    
+    .asset h3::before {
+      content: "📊";
+      margin-right: 0.5rem;
+      font-size: 1.2em;
+    }
+    
+    .asset-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .threatBlock {
+      background: rgba(247, 247, 247, 0.7);
+      border-left: 4px solid var(--warning-color);
+    }
+    
+    .threatBlock h4 {
+      margin-top: 0;
+      color: var(--warning-color);
+    }
+    
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    .info-tooltip {
+      display: inline-block;
+      margin-left: 0.3rem;
+      cursor: help;
+      color: var(--primary-color);
+      font-size: 0.9rem;
+    }
+    
+    .tooltip-content {
+      display: none;
+      position: absolute;
+      background: #333;
+      color: white;
+      padding: 0.5rem;
+      border-radius: 4px;
+      max-width: 300px;
+      z-index: 1000;
+      font-weight: normal;
+      font-size: 0.9rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    
+    .info-tooltip:hover .tooltip-content {
+      display: block;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      transition: border 0.3s;
+      font-family: inherit;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
+    }
+    
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    
+    .input-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .input-col {
+      flex: 1;
+    }
+    
+    button {
+      padding: 0.7rem 1.2rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    .btn-icon {
+      margin-right: 0.5rem;
+    }
+    
+    .remove-btn {
+      background-color: var(--danger-color);
+    }
+    
+    .remove-btn:hover {
+      background-color: #c0392b;
+    }
+    
+    .add-btn {
+      background-color: var(--success-color);
+    }
+    
+    .add-btn:hover {
+      background-color: #27ae60;
+    }
+    
+    .calculate-btn {
+      background-color: var(--primary-color);
+      font-size: 1.1rem;
+      padding: 0.8rem 1.5rem;
+      margin: 1rem auto;
+      display: block;
+    }
+    
+    .risk-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .metric-box {
+      flex: 1;
+      min-width: 200px;
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    
+    .metric-title {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+    
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    .risk-result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: rgba(46, 204, 113, 0.1);
+      border-left: 4px solid var(--success-color);
+      border-radius: 4px;
+    }
+    
+    .risk-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--success-color);
+    }
+    
+    .risk-category {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    
+    .risk-low {
+      background-color: rgba(46, 204, 113, 0.2);
+      color: #27ae60;
+    }
+    
+    .risk-medium {
+      background-color: rgba(243, 156, 18, 0.2);
+      color: #d35400;
+    }
+    
+    .risk-high {
+      background-color: rgba(231, 76, 60, 0.2);
+      color: #c0392b;
+    }
+    
+    .collapsible {
+      background-color: #f5f5f5;
+      padding: 0.8rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      border: 1px solid #eee;
+    }
+    
+    .collapsible::after {
+      content: "▼";
+      float: right;
+      transition: transform 0.3s;
+    }
+    
+    .collapsible.collapsed::after {
+      transform: rotate(-90deg);
+    }
+    
+    .collapsible-content {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .collapsible-content.collapsed {
+      max-height: 0;
+    }
+    
+    #results {
+      margin-top: 2rem;
+    }
+    
+    .result-item {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .result-item h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+    
+    .print-btn {
+      background-color: #555;
+      margin-top: 1rem;
+    }
+    
+    .asset-toggle {
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    
+    .asset-toggle:hover {
+      background: rgba(0,0,0,0.05);
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    
+    .progress-bar {
+      height: 5px;
+      background: #eee;
+      width: 100%;
+      margin-bottom: 1rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    
+    .progress-indicator {
+      position: absolute;
+      height: 100%;
+      background: var(--primary-color);
+      transition: width 0.3s;
+    }
+    
+    @media (max-width: 768px) {
+      .input-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+    
+    /* Print styles */
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .container {
+        box-shadow: none;
+        margin-bottom: 1rem;
+        page-break-inside: avoid;
+      }
+      
+      button {
+        display: none;
+      }
+      
+      .risk-metrics {
+        page-break-inside: avoid;
+      }
+      
+      .header {
+        color: black;
+        background: white;
+        padding: 1rem 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>FAIR Risk Assessment Calculator</h1>
+  </div>
+  
+  <div class="subheader">
+    Factor Analysis of Information Risk (FAIR) - Quantitative Risk Assessment Tool
+  </div>
+
+  <div class="main-content">
+    <!-- Assessment Information -->
+    <div class="container">
+      <h2>Assessment Information</h2>
+      <div class="input-row">
+        <div class="input-col">
+          <label for="assessmentName">Assessment Name:</label>
+          <input type="text" id="assessmentName" placeholder="E.g., Annual Security Risk Assessment" />
+        </div>
+        <div class="input-col">
+          <label for="assessmentDate">Assessment Date:</label>
+          <input type="date" id="assessmentDate" />
+        </div>
+      </div>
+      
+      <div class="input-row">
+        <div class="input-col">
+          <label for="assessorName">Assessor Name:</label>
+          <input type="text" id="assessorName" placeholder="Enter assessor name" />
+        </div>
+        <div class="input-col">
+          <label for="assessorRole">Assessor Role:</label>
+          <input type="text" id="assessorRole" placeholder="E.g., Security Analyst" />
+        </div>
+      </div>
+      
+      <label for="orgName">Organization Name:</label>
+      <input type="text" id="orgName" placeholder="Enter organization name" />
+      
+      <label for="orgDescription">Organization Description:</label>
+      <textarea id="orgDescription" placeholder="Enter organization description" rows="3"></textarea>
+    </div>
+
+    <!-- Assets Container -->
+    <div class="container">
+      <h2>Assets</h2>
+      <div class="progress-bar">
+        <div class="progress-indicator" id="assetProgress" style="width: 0%"></div>
+      </div>
+      <div id="assetsContainer"></div>
+      <button type="button" onclick="addAsset()" class="add-btn">
+        <span class="btn-icon">➕</span> Add Asset
+      </button>
+    </div>
+
+    <!-- Calculate Risk Button -->
+    <div class="container">
+      <button type="button" onclick="calculateRisks()" class="calculate-btn">
+        <span class="btn-icon">📊</span> Calculate Risks
+      </button>
+    </div>
+
+    <!-- Results Display -->
+    <div class="container">
+      <h2>Assessment Summary</h2>
+      <div id="results"></div>
+      <button type="button" onclick="printResults()" class="print-btn">
+        <span class="btn-icon">🖨️</span> Print Results
+      </button>
+      <button type="button" onclick="exportToCSV()" class="print-btn" style="margin-left: 10px;">
+        <span class="btn-icon">📋</span> Export to CSV
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize data structures
+    let assetCount = 0;
+    let threatCount = {};
+    let assessmentData = {
+      assets: []
+    };
+    
+    // DOM Ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('assessmentDate').value = today;
+      
+      // Add first asset automatically
+      addAsset();
+    });
+
+    // Function to add a new asset block
+    function addAsset() {
+      assetCount++;
+      threatCount[assetCount] = 0;
+      const assetsContainer = document.getElementById("assetsContainer");
+
+      // Create a container div for the asset
+      const assetDiv = document.createElement("div");
+      assetDiv.className = "asset";
+      assetDiv.id = "asset_" + assetCount;
+
+      // Asset header and content
+      assetDiv.innerHTML = `
+        <div class="asset-header">
+          <h3>Asset ${assetCount}</h3>
+          <button type="button" class="remove-btn" onclick="removeAsset('${assetDiv.id}')">
+            <span class="btn-icon">🗑️</span> Remove Asset
+          </button>
+        </div>
+        
+        <div class="input-row">
+          <div class="input-col">
+            <label for="assetName_${assetCount}">Asset Name:</label>
+            <select id="assetName_${assetCount}" onchange="toggleCustomAsset(${assetCount})">
+              <option value="">-- Select Asset Type --</option>
+              <option value="Customer Database">Customer Database</option>
+              <option value="Financial Transactions System">Financial Transactions System</option>
+              <option value="Employee Laptops">Employee Laptops</option>
+              <option value="Cloud Infrastructure">Cloud Infrastructure</option>
+              <option value="Web Application">Web Application</option>
+              <option value="Network Infrastructure">Network Infrastructure</option>
+              <option value="Intellectual Property">Intellectual Property</option>
+              <option value="Personal Identifiable Information">Personal Identifiable Information (PII)</option>
+              <option value="Custom">Custom (enter below)</option>
+            </select>
+          </div>
+          <div class="input-col">
+            <div id="customAssetDiv_${assetCount}" style="display:none;">
+              <label for="customAssetName_${assetCount}">Custom Asset Name:</label>
+              <input type="text" id="customAssetName_${assetCount}" placeholder="Enter asset name" />
+            </div>
+          </div>
+        </div>
+        
+        <div class="input-row">
+          <div class="input-col">
+            <label for="assetValue_${assetCount}">Asset Value ($): 
+              <span class="info-tooltip">ⓘ
+                <span class="tooltip-content">The estimated monetary value of the asset. Used in risk calculations.</span>
+              </span>
+            </label>
+            <input type="number" id="assetValue_${assetCount}" placeholder="e.g., 100000" step="any" min="0" />
+          </div>
+          <div class="input-col">
+            <label for="assetCategory_${assetCount}">Asset Category:</label>
+            <select id="assetCategory_${assetCount}">
+              <option value="Data">Data</option>
+              <option value="Technology">Technology</option>
+              <option value="People">People</option>
+              <option value="Facilities">Facilities</option>
+              <option value="Process">Process</option>
+            </select>
+          </div>
+        </div>
+        
+        <label for="assetDescription_${assetCount}">Asset Description:</label>
+        <textarea id="assetDescription_${assetCount}" placeholder="Describe the asset and its importance to the organization" rows="2"></textarea>
+        
+        <div class="collapsible" onclick="toggleCollapsible(this)">
+          <strong>Threats & Vulnerabilities</strong>
+        </div>
+        <div class="collapsible-content">
+          <div id="threatsContainer_${assetCount}"></div>
+          <button type="button" onclick="addThreat('${assetCount}')" class="add-btn">
+            <span class="btn-icon">➕</span> Add Threat/Vulnerability
+          </button>
+        </div>
+        
+        <div class="collapsible" onclick="toggleCollapsible(this)">
+          <strong>FAIR Risk Parameters</strong>
+        </div>
+        <div class="collapsible-content">
+          <div class="input-row">
+            <div class="input-col">
+              <label for="tef_${assetCount}">Threat Event Frequency (per year): 
+                <span class="info-tooltip">ⓘ
+                  <span class="tooltip-content">The frequency with which a threat agent will act against the asset.</span>
+                </span>
+              </label>
+              <input type="number" id="tef_${assetCount}" placeholder="e.g., 12" step="any" min="0" />
+            </div>
+            <div class="input-col">
+              <label for="vuln_${assetCount}">Vulnerability (probability 0-1): 
+                <span class="info-tooltip">ⓘ
+                  <span class="tooltip-content">The probability that a threat event will become a loss event.</span>
+                </span>
+              </label>
+              <input type="number" id="vuln_${assetCount}" placeholder="e.g., 0.6" step="0.01" min="0" max="1" />
+            </div>
+          </div>
+          
+          <div class="input-row">
+            <div class="input-col">
+              <label for="plm_${assetCount}">Primary Loss Magnitude ($): 
+                <span class="info-tooltip">ⓘ
+                  <span class="tooltip-content">Direct financial impact from the loss event.</span>
+                </span>
+              </label>
+              <input type="number" id="plm_${assetCount}" placeholder="e.g., 50000" step="any" min="0" />
+            </div>
+            <div class="input-col">
+              <label for="slm_${assetCount}">Secondary Loss Magnitude ($): 
+                <span class="info-tooltip">ⓘ
+                  <span class="tooltip-content">Indirect costs such as reputation damage, regulatory fines, etc.</span>
+                </span>
+              </label>
+              <input type="number" id="slm_${assetCount}" placeholder="e.g., 20000" step="any" min="0" />
+            </div>
+          </div>
+        </div>
+        
+        <div class="risk-result" id="riskResult_${assetCount}"></div>
+      `;
+      assetsContainer.appendChild(assetDiv);
+      
+      // Add initial threat
+      addThreat(assetCount);
+      
+      // Update progress bar
+      updateProgressBar();
+    }
+
+    // Function to toggle custom asset input display
+    function toggleCustomAsset(assetId) {
+      const selectElem = document.getElementById("assetName_" + assetId);
+      const customDiv = document.getElementById("customAssetDiv_" + assetId);
+      
+      if (selectElem.value === "Custom") {
+        customDiv.style.display = "block";
+      } else {
+        customDiv.style.display = "none";
+      }
+    }
+
+    // Toggle collapsible sections
+    function toggleCollapsible(element) {
+      element.classList.toggle("collapsed");
+      const content = element.nextElementSibling;
+      content.classList.toggle("collapsed");
+    }
+
+    // Function to remove an asset block
+    function removeAsset(assetId) {
+      const assetDiv = document.getElementById(assetId);
+      
+      // Ask for confirmation
+      if (confirm("Are you sure you want to remove this asset?")) {
+        assetDiv.parentNode.removeChild(assetDiv);
+        updateProgressBar();
+      }
+    }
+
+    // Function to add a threat/vulnerability pair for an asset
+    function addThreat(assetId) {
+      const numericAssetId = assetId.toString().includes('_') ? assetId.split('_')[1] : assetId;
+      threatCount[numericAssetId]++;
+      const currentThreatNum = threatCount[numericAssetId];
+      
+      const threatsContainer = document.getElementById("threatsContainer_" + numericAssetId);
+      const threatDiv = document.createElement("div");
+      threatDiv.className = "threatBlock";
+      threatDiv.id = `threat_${numericAssetId}_${currentThreatNum}`;
+
+      // Threat and vulnerability block
+      threatDiv.innerHTML = `
+        <h4>Threat ${currentThreatNum}</h4>
+        <div class="input-row">
+          <div class="input-col">
+            <label for="threatType_${numericAssetId}_${currentThreatNum}">Threat Type:</label>
+            <select id="threatType_${numericAssetId}_${currentThreatNum}" onchange="populateThreats(${numericAssetId}, ${currentThreatNum})">
+              <option value="">-- Select Threat Type --</option>
+              <option value="Malicious">Malicious</option>
+              <option value="Accidental">Accidental</option>
+              <option value="Natural">Natural</option>
+              <option value="Structural">Structural</option>
+            </select>
+          </div>
+          <div class="input-col">
+            <label for="threatSource_${numericAssetId}_${currentThreatNum}">Threat Source:</label>
+            <select id="threatSource_${numericAssetId}_${currentThreatNum}">
+              <option value="">-- Select Source --</option>
+              <option value="External">External</option>
+              <option value="Internal">Internal</option>
+              <option value="Partner">Partner</option>
+            </select>
+          </div>
+        </div>
+        
+        <label for="threatDesc_${numericAssetId}_${currentThreatNum}">Threat Description:</label>
+        <input type="text" id="threatDesc_${numericAssetId}_${currentThreatNum}" placeholder="Describe the threat" />
+        
+        <label for="vulnDesc_${numericAssetId}_${currentThreatNum}">Vulnerability Details:</label>
+        <input type="text" id="vulnDesc_${numericAssetId}_${currentThreatNum}" placeholder="Describe the vulnerability" />
+        
+        <div class="input-row">
+          <div class="input-col">
+            <label for="threatLikelihood_${numericAssetId}_${currentThreatNum}">Threat Likelihood (1-5):</label>
+            <input type="number" id="threatLikelihood_${numericAssetId}_${currentThreatNum}" min="1" max="5" placeholder="1-5" />
+          </div>
+          <div class="input-col">
+            <label for="vulnSeverity_${numericAssetId}_${currentThreatNum}">Vulnerability Severity (1-5):</label>
+            <input type="number" id="vulnSeverity_${numericAssetId}_${currentThreatNum}" min="1" max="5" placeholder="1-5" />
+          </div>
+        </div>
+        
+        <button type="button" class="remove-btn" onclick="removeThreat('threat_${numericAssetId}_${currentThreatNum}')">
+          <span class="btn-icon">🗑️</span> Remove Threat
+        </button>
+      `;
+      threatsContainer.appendChild(threatDiv);
+    }
+    
+    // Function to remove a threat
+    function removeThreat(threatId) {
+      const threatDiv = document.getElementById(threatId);
+      threatDiv.parentNode.removeChild(threatDiv);
+    }
+    
+    // Function to populate threat descriptions based on type
+    function populateThreats(assetId, threatNum) {
+      const threatType = document.getElementById(`threatType_${assetId}_${threatNum}`).value;
+      const threatDescInput = document.getElementById(`threatDesc_${assetId}_${threatNum}`);
+      const vulnDescInput = document.getElementById(`vulnDesc_${assetId}_${threatNum}`);
+      
+      // Suggest some common threats and vulnerabilities based on type
+      if (threatType === "Malicious") {
+        threatDescInput.placeholder = "E.g., Ransomware attack, Phishing, Data breach";
+        vulnDescInput.placeholder = "E.g., Unpatched systems, Weak passwords, Missing 2FA";
+      } else if (threatType === "Accidental") {
+        threatDescInput.placeholder = "E.g., Human error, Misconfiguration, Data leakage";
+        vulnDescInput.placeholder = "E.g., Lack of training, No validation controls";
+      } else if (threatType === "Natural") {
+        threatDescInput.placeholder = "E.g., Fire, Flood, Power outage";
+        vulnDescInput.placeholder = "E.g., No disaster recovery plan, Single point of failure";
+      } else if (threatType === "Structural") {
+        threatDescInput.placeholder = "E.g., System failure, Hardware malfunction";
+        vulnDescInput.placeholder = "E.g., No redundancy, End-of-life hardware";
+      } else {
+        threatDescInput.placeholder = "Describe the threat";
+        vulnDescInput.placeholder = "Describe the vulnerability";
+      }
+    }
+    
+    // Update progress bar based on completeness
+    function updateProgressBar() {
+      const assetElements = document.querySelectorAll('.asset');
+      const progress = document.getElementById('assetProgress');
+      progress.style.width = (assetElements.length * 20) + '%';
+    }
+
+    // Function to calculate risk for each asset and display the results
+    function calculateRisks() {
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = ""; // Clear previous results
+      
+      // Get assessment information
+      const assessmentName = document.getElementById("assessmentName").value || "Risk Assessment";
+      const assessmentDate = document.getElementById("assessmentDate").value || new Date().toISOString().split('T')[0];
+      const assessorName = document.getElementById("assessorName").value || "Anonymous";
+      const assessorRole = document.getElementById("assessorRole").value || "Risk Assessor";
+      const orgName = document.getElementById("orgName").value || "Organization";
+      const orgDescription = document.getElementById("orgDescription").value || "N/A";
+      
+      // Display assessment header
+      const headerDiv = document.createElement("div");
+      headerDiv.innerHTML = `
+        <div class="result-item">
+          <h3>Assessment Overview</h3>
+          <p><strong>Assessment Name:</strong> ${assessmentName}</p>
+          <p><strong>Date:</strong> ${assessmentDate}</p>
+          <p><strong>Assessor:</strong> ${assessorName} (${assessorRole})</p>
+          <p><strong>Organization:</strong> ${orgName}</p>
+          <p><strong>Description:</strong> ${orgDescription}</p>
+        </div>
+      `;
+      resultsDiv.appendChild(headerDiv);
+      
+      // Collect all asset risk values for overall risk calculation
+      let totalRisk = 0;
+      let assetRisks = [];
+      
+      // Loop through each asset block
+      const assetElements = document.querySelectorAll('.asset');
+      assetElements.forEach((assetDiv) => {
+        const assetId = assetDiv.id.split('_')[1];
+        
+        // Get asset name (if "Custom" then use the custom field)
+        let assetName = document.getElementById("assetName_" + assetId).value;
+        if (assetName === "Custom") {
+          assetName = document.getElementById("customAssetName_" + assetId).value;
+        }
+        if (!assetName) assetName = "Unnamed Asset " + assetId;
+        
+        // Retrieve FAIR parameters
+        const tef = parseFloat(document.getElementById("tef_" + assetId).value) || 0;
+        const vuln = parseFloat(document.getElementById("vuln_" + assetId).value) || 0;
+        const plm = parseFloat(document.getElementById("plm_" + assetId).value) || 0;
+        const slm = parseFloat(document.getElementById("slm_" + assetId).value) || 0;
+        
+        // Calculate risk value: TEF * Vulnerability * (Primary Loss + Secondary Loss)
+        const riskValue = tef * vuln * (plm + slm);
+        
+        // Determine risk category based on thresholds
+        let riskCategory = "";
+        if (riskValue < 1000) {
+          riskCategory = '<span class="risk-category risk-low">Low</span>';
+        } else if (riskValue < 5000) {
+          riskCategory = '<span class="risk-category risk-medium">Medium</span>';
+        } else {
+          riskCategory = '<span class="risk-category risk-high">High</span>';
+        }
+        
+        // Update the risk result in the asset block
+        document.getElementById("riskResult_" + assetId).innerHTML = `<strong>Risk Value:</strong> $${riskValue.toFixed(2)} ${riskCategory}`;
+        
+        totalRisk += riskValue;
+        assetRisks.push({ name: assetName, risk: riskValue });
+      });
+      
+      // Display overall risk summary
+      const overallDiv = document.createElement("div");
+      overallDiv.className = "result-item";
+      overallDiv.innerHTML = `
+        <h3>Overall Risk Summary</h3>
+        <p><strong>Total Risk:</strong> $${totalRisk.toFixed(2)}</p>
+        <p><strong>Average Risk per Asset:</strong> $${(assetRisks.length ? (totalRisk/assetRisks.length).toFixed(2) : 0)}</p>
+      `;
+      resultsDiv.appendChild(overallDiv);
+    }
+
+    // Function to print the results
+    function printResults() {
+      window.print();
+    }
+
+    // Function to export assessment data to CSV
+    function exportToCSV() {
+      let csvContent = "Asset Name,Threat Event Frequency,Vulnerability,Primary Loss Magnitude,Secondary Loss Magnitude,Risk Value\n";
+      document.querySelectorAll('.asset').forEach(function(assetDiv) {
+        const assetId = assetDiv.id.split('_')[1];
+        let assetName = document.getElementById("assetName_" + assetId).value;
+        if (assetName === "Custom") {
+          assetName = document.getElementById("customAssetName_" + assetId).value;
+        }
+        if (!assetName) assetName = "Unnamed Asset " + assetId;
+        const tef = parseFloat(document.getElementById("tef_" + assetId).value) || 0;
+        const vuln = parseFloat(document.getElementById("vuln_" + assetId).value) || 0;
+        const plm = parseFloat(document.getElementById("plm_" + assetId).value) || 0;
+        const slm = parseFloat(document.getElementById("slm_" + assetId).value) || 0;
+        const riskValue = tef * vuln * (plm + slm);
+        csvContent += `"${assetName}",${tef},${vuln},${plm},${slm},${riskValue.toFixed(2)}\n`;
+      });
+      
+      // Create a Blob and download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "risk_assessment.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
